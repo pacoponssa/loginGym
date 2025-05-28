@@ -1,7 +1,7 @@
-import React from 'react';
+
 
 const ProtectedPage = () => {
-  return <h1>Esta es una página protegida, solo accesible con un token válido</h1>;
-};
+  return <h1>Esta es una página protegida, Solo accesible con token</h1>
+}
 
 export default ProtectedPage;

@@ -3,7 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
-// import RegisterForm from './components/RegisterForm';
+
 
 function App() {
   const [isLoginView, setIsLoginView] = useState(true);

@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (username, password) => {
-    await axios.post('http://localhost:3000/auth/register', { username, password });
+    await axios.post('http://localhost:3000/api/auth/register', { username, password });
   };
 
   const refreshToken = async () => {
