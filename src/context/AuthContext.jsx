@@ -12,25 +12,41 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  const login = async (username, password) => {
-    console.log("llega a login", username, password)
-    const response = await axios.post('http://localhost:3000/api/auth/login', { username, password });
-    console.log("llega a login", response)
-    const accessToken = response.data.accessToken;
-    setToken(accessToken);
-    localStorage.setItem('accessToken', accessToken);
-  };
 
-  const register = async (username, password) => {
-    await axios.post('http://localhost:3000/api/auth/register', { username, password });
-  };
+ const login = async (email, password) => {
+  const response = await axios.post('http://localhost:3000/auth/login', { email, password });
+  const token = response.data.accessToken;
+  const user = response.data.usuario; 
+
+  setToken(token);
+  localStorage.setItem('accessToken', token);
+  localStorage.setItem('usuario', JSON.stringify(user)); // para usar su rol
+
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+  console.log("Usuario logueado:", user);
+};
+
+
+
+ const register = async (email, password, nombre, telefono, rol = 1) => {
+  const response = await axios.post('http://localhost:3000/auth/register', {
+    email,
+    password,
+    nombre,
+    telefono,
+    rol
+  });
+  console.log("Usuario registrado exitosamente:", response.data);
+};
+
 
   const refreshToken = async () => {
     const storedToken = localStorage.getItem('accessToken');
     if (storedToken) {
       console.log("llega a refrescar", storedToken)
       try {
-        const response = await axios.post('http://localhost:3000/auth/refresh', { token: storedToken });
+        const response = await axios.post('http://localhost:3000/auth/login', { token: storedToken });
         const newAccessToken = response.data.accessToken;
         console.log("respuesta de refrescar", newAccessToken)
         setToken(newAccessToken);
