@@ -11,31 +11,14 @@ const Register = () => {
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
-    e.preventDefault();
-    try {
-      await register(email, password, nombre, telefono);
-      console.log(
-        "email",
-        email,
-        "password",
-        password,
-        "nombre",
-        nombre,
-        "telefono",
-        telefono
-      );
-
-      // Redirigir al usuario a la página de usuario después del registro exitoso
-      const usuario = JSON.parse(localStorage.getItem("usuario"));
-      if (usuario?.rol === 2) {
-        navigate("/admin");
-      } else {
-        navigate("/alumno");
-      }
-    } catch (error) {
-      console.error("Error de registro:", error);
-    }
-  };
+  e.preventDefault();
+  try {
+    await register(email, password, nombre, telefono);
+    navigate("/alumno");
+  } catch (error) {
+    console.error("Error de registro:", error);
+  }
+};
 
   return (
     <>

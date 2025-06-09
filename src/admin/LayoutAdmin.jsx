@@ -4,7 +4,7 @@ function LayoutAdmin({ children }) {
   return (
     <div className="flex flex-col h-screen">
       <header className="bg-gray-800 text-white p-4">
-        <h1 className="text-xl">Admin Dashboard</h1>
+        <h1 className="text-xl">Admin</h1>
         <div>
           <Link to="/admin" className="text-white hover:text-gray-300 mr-4">Dashboard</Link>
           <Link to="/admin/usuarios" className="text-white hover:text-gray-300 ml-4">Usuarios</Link>  
@@ -19,7 +19,7 @@ function LayoutAdmin({ children }) {
         <Outlet />  
       </main>
       <footer className="bg-gray-800 text-white p-4 text-center">
-        © 2023 Admin Dashboard
+        Gimnasio © 2023 
       </footer>
     </div>
   );
