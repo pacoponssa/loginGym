@@ -9,58 +9,87 @@ function FormularioUsuarios() {
   const [error, setError] = useState(null);
   const [usuario, setUsuario] = useState({
     nombre: "",
-    email: "",
+    dni: "",
     password: "",
     telefono: "",
     rol: "alumno", // por defecto
   });
 
+  const [todasDisciplinas, setTodasDisciplinas] = useState([]);
+  const [disciplinasAsignadas, setDisciplinasAsignadas] = useState([]);
+
   useEffect(() => {
-    if (id !== "nuevo") {
-      setLoading(true);
-      axios.get(`/usuarios/${id}`)
-        .then((res) => {
-          const user = res.data.data;
-          setUsuario({
-            nombre: user.nombre,
-            email: user.email,
-            telefono: user.telefono,
-            password: "",
-            rol: user.rol === 2 ? "admin" : "alumno",
-          });
-          setLoading(false);
-        })
-        .catch((error) => {
-          setError(error.message);
-          setLoading(false);
+    const fetchDisciplinas = async () => {
+      const res = await axios.get("/disciplina");
+      setTodasDisciplinas(res.data.data);
+    };
+
+    const fetchUsuario = async () => {
+      if (id !== "nuevo") {
+        setLoading(true);
+        const res = await axios.get(`/usuarios/${id}`);
+        const user = res.data.data;
+        setUsuario({
+          nombre: user.nombre,
+          dni: user.dni,
+          telefono: user.telefono,
+          password: "",
+          rol: user.rol === 2 ? "admin" : "alumno",
         });
-    }
+
+        // si es alumno, obtener sus disciplinas
+        if (user.rol === 1) {
+          const r = await axios.get(`/inscripciones/${id}/disciplinas`);
+          const ids = r.data.data.map((d) => d.idDisciplina);
+          setDisciplinasAsignadas(ids);
+        }
+
+        setLoading(false);
+      }
+    };
+
+    fetchDisciplinas();
+    fetchUsuario();
   }, [id]);
 
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUsuario({ ...usuario, [name]: value });
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const dataParaEnviar = {
-      ...usuario,
-      rol: usuario.rol === "admin" ? 2 : 1,
-    };
-    if (!dataParaEnviar.password) delete dataParaEnviar.password;
-
-    try {
-      if (id === "nuevo") {
-        await axios.post("/usuarios", dataParaEnviar);
-      } else {
-        await axios.put(`/usuarios/${id}`, dataParaEnviar);
-      }
-      navigate("/admin/usuarios");
-    } catch (error) {
-      setError(error.message);
-    }
+  e.preventDefault();
+  const dataParaEnviar = {
+    ...usuario,
+    rol: usuario.rol === "admin" ? 2 : 1,
   };
+  if (!dataParaEnviar.password) delete dataParaEnviar.password;
+
+  try {
+    if (id === "nuevo") {
+      const respuestaUsuario = await axios.post("/usuarios", dataParaEnviar);
+      const nuevoId = respuestaUsuario.data.data.idUsuario;
+      if (dataParaEnviar.rol === 1) {
+        await axios.post(`/inscripcion/${nuevoId}/disciplinas`, {
+          idsDisciplinas: disciplinasAsignadas,
+        });
+      }
+    } else {
+      await axios.put(`/usuarios/${id}`, dataParaEnviar);
+      if (dataParaEnviar.rol === 1) {
+        await axios.post(`/inscripcion/${id}/disciplinas`, {
+          idsDisciplinas: disciplinasAsignadas,
+        });
+      }
+    }
+    navigate("/admin/usuarios");
+    alert("Usuario guardado correctamente.");
+  } catch (error) {
+    setError(error.message);
+  }
+};
+
 
   return (
     <div>
@@ -73,7 +102,9 @@ function FormularioUsuarios() {
         <div className="max-w-md p-5 mx-auto mt-10 bg-white rounded-lg shadow-md">
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block mb-1 text-sm font-bold text-gray-700">Nombre:</label>
+              <label className="block mb-1 text-sm font-bold text-gray-700">
+                Nombre:
+              </label>
               <input
                 type="text"
                 name="nombre"
@@ -85,11 +116,13 @@ function FormularioUsuarios() {
             </div>
 
             <div className="mb-4">
-              <label className="block mb-1 text-sm font-bold text-gray-700">Email:</label>
+              <label className="block mb-1 text-sm font-bold text-gray-700">
+                DNI:
+              </label>
               <input
-                type="email"
-                name="email"
-                value={usuario.email}
+                type="text"
+                name="dni"
+                value={usuario.dni}
                 onChange={handleChange}
                 className="w-full p-2 border rounded"
                 required
@@ -97,7 +130,9 @@ function FormularioUsuarios() {
             </div>
 
             <div className="mb-4">
-              <label className="block mb-1 text-sm font-bold text-gray-700">Teléfono:</label>
+              <label className="block mb-1 text-sm font-bold text-gray-700">
+                Teléfono:
+              </label>
               <input
                 type="text"
                 name="telefono"
@@ -108,7 +143,9 @@ function FormularioUsuarios() {
             </div>
 
             <div className="mb-4">
-              <label className="block mb-1 text-sm font-bold text-gray-700">Contraseña:</label>
+              <label className="block mb-1 text-sm font-bold text-gray-700">
+                Contraseña:
+              </label>
               <input
                 type="password"
                 name="password"
@@ -121,7 +158,9 @@ function FormularioUsuarios() {
             </div>
 
             <div className="mb-4">
-              <label className="block mb-1 text-sm font-bold text-gray-700">Rol:</label>
+              <label className="block mb-1 text-sm font-bold text-gray-700">
+                Rol:
+              </label>
               <select
                 name="rol"
                 value={usuario.rol}
@@ -132,6 +171,33 @@ function FormularioUsuarios() {
                 <option value="admin">Administrador</option>
               </select>
             </div>
+
+            {usuario.rol === "alumno" && (
+              <div className="mb-4">
+                <label className="block mb-1 text-sm font-bold text-gray-700">
+                  Disciplinas asignadas:
+                </label>
+                {todasDisciplinas.map((disc) => (
+                  <div
+                    key={disc.idDisciplina}
+                    className="flex items-center gap-2 mb-1"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={disciplinasAsignadas.includes(disc.idDisciplina)}
+                      onChange={() => {
+                        setDisciplinasAsignadas((prev) =>
+                          prev.includes(disc.idDisciplina)
+                            ? prev.filter((id) => id !== disc.idDisciplina)
+                            : [...prev, disc.idDisciplina]
+                        );
+                      }}
+                    />
+                    <span>{disc.nombre}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="flex justify-center mt-6">
               <button
