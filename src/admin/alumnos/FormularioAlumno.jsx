@@ -1,10 +1,10 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
-function FormularioUsuarios() {
+function FormularioAlumno() {
+  const { id } = useParams(); // ✅ Obtenemos el ID de la URL
   const navigate = useNavigate();
-  const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [usuario, setUsuario] = useState({
@@ -17,18 +17,23 @@ function FormularioUsuarios() {
 
   useEffect(() => {
     const fetchUsuario = async () => {
-      if (id !== "nuevo") {
+      if (id) {
         setLoading(true);
-        const res = await axios.get(`/usuario/${id}`);
-        const user = res.data.data;
-        setUsuario({
-          nombre: user.nombre,
-          dni: user.dni,
-          telefono: user.telefono,
-          password: "",
-          rol: user.rol === 2 ? "admin" : "alumno",
-        });
-        setLoading(false);
+        try {
+          const res = await axios.get(`/usuario/${id}`);
+          const user = res.data.data;
+          setUsuario({
+            nombre: user.nombre,
+            dni: user.dni,
+            telefono: user.telefono,
+            password: "",
+            rol: user.rol === 2 ? "admin" : "alumno",
+          });
+        } catch (err) {
+          setError("Error al cargar el usuario");
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
@@ -49,13 +54,13 @@ function FormularioUsuarios() {
     if (!dataParaEnviar.password) delete dataParaEnviar.password;
 
     try {
-      if (id === "nuevo") {
+      if (!id) {
         await axios.post("/usuario", dataParaEnviar);
       } else {
         await axios.put(`/usuario/${id}`, dataParaEnviar);
       }
-      navigate("/admin/usuario");
       alert("Usuario guardado correctamente.");
+      navigate("/admin/alumnos");
     } catch (error) {
       setError(error.message);
     }
@@ -64,14 +69,13 @@ function FormularioUsuarios() {
   return (
     <div>
       <div className="p-6 text-2xl font-bold text-center text-white bg-blue-600">
-        {id !== "nuevo" ? "Editar Usuario" : "Crear Nuevo Usuario"}
+        {id ? "Editar Usuario" : "Crear Nuevo Usuario"}
       </div>
       {loading ? (
         <p className="text-center mt-6">Cargando...</p>
       ) : (
         <div className="max-w-md p-5 mx-auto mt-10 bg-white rounded-lg shadow-md">
           <form onSubmit={handleSubmit}>
-            {/* Campos */}
             {["nombre", "dni", "telefono"].map((field) => (
               <div className="mb-4" key={field}>
                 <label className="block mb-1 text-sm font-bold text-gray-700">
@@ -98,8 +102,8 @@ function FormularioUsuarios() {
                 value={usuario.password}
                 onChange={handleChange}
                 className="w-full p-2 border rounded"
-                required={id === "nuevo"}
-                disabled={id !== "nuevo"}
+                required={!id}
+                disabled={!!id}
               />
             </div>
 
@@ -127,7 +131,7 @@ function FormularioUsuarios() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/admin/usuario")}
+                onClick={() => navigate("/admin/alumnos")}
                 className="px-4 py-2 font-bold text-white bg-red-500 rounded hover:bg-red-700"
               >
                 Cancelar
@@ -141,4 +145,4 @@ function FormularioUsuarios() {
   );
 }
 
-export default FormularioUsuarios;
+export default FormularioAlumno;

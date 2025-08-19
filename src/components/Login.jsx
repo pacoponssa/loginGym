@@ -1,13 +1,12 @@
 import React, { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
-import { Routes, Route } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import { Mail, Lock, EyeOff, Eye } from "lucide-react";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [dni, setDni] = useState("");
   const [password, setPassword] = useState("");
   const { login, token, setToken } = useContext(AuthContext);
   const [showPassword, setShowPassword] = useState(false);
@@ -18,18 +17,25 @@ const Login = () => {
     setShowPassword(!showPassword);
   };
 
+  const location = useLocation();
+  const sessionExpired = location.state?.expired;
+
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    // Validar que los campos no estén vacíos
-    if (!email || !password) {
+    if (!dni || !password) {
       setError("Todos los campos son obligatorios");
       return;
     }
     try {
-      await login(email, password);
-      navigate("/auth/login");
+      await login(dni, password);
+      const user = JSON.parse(localStorage.getItem("usuario"));
+      if (user.rol === 2) {
+        navigate("/admin");
+      } else {
+        navigate("/alumno");
+      }
     } catch (error) {
       setError("Error de autenticación. Por favor, verifica tus credenciales.");
       console.error("Error de autenticación:", error);
@@ -37,16 +43,14 @@ const Login = () => {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
     const user = JSON.parse(localStorage.getItem("usuario"));
 
     if (token && user) {
-      if (user.rol === 2) {
-        navigate("/admin");
-      } else if (user.rol === 1) {
-        navigate("/alumno");
-      }
+      if (user.rol === 2) navigate("/admin");
+      if (user.rol === 1) navigate("/alumno");
     }
-  }, [token, navigate]);
+  }, []);
 
   return (
     <>
@@ -83,6 +87,12 @@ const Login = () => {
         </p>
       </div>
 
+      {sessionExpired && (
+        <p className="text-red-600 text-sm text-center mb-2">
+          Tu sesión ha expirado. Por favor, iniciá sesión nuevamente.
+        </p>
+      )}
+
       <form
         onSubmit={handleLogin}
         className="space-y-6 w-full max-w-md bg-white p-6 rounded-lg shadow-md sm:mx-auto sm:w-full sm:max-w-md"
@@ -91,26 +101,26 @@ const Login = () => {
         {/* Mostrar mensaje de error */}
         <div className="space-y-4">
           <div>
-            {/* Campo para el email o nombre de usuario */}
+            {/* Campo para el dni o nombre de usuario */}
             <label
-              htmlFor="email"
+              htmlFor="dni"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Email
+              DNI
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
                 <Mail size={18} />
               </div>
               <input
-                id="email"
-                type="email"
-                autoComplete="email"
+                id="dni"
+                type="text"
+                autoComplete="dni"
                 required
                 className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="12345678"
+                value={dni}
+                onChange={(e) => setDni(e.target.value)}
               />
             </div>
           </div>

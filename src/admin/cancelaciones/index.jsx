@@ -1,71 +1,48 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function CancelacionesIndex() {
-  const navigate = useNavigate();
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const cargarCancelaciones = () => {
-    axios.get("/cancelacion")
-      .then((respuesta) => {
-        setLoading(false);
-        if (respuesta.status === 200) {
-          setData(respuesta.data.data);
-        } else {
-          console.error("Error al obtener las cancelaciones:", respuesta.statusText);
-        }
-      })
-      .catch((error) => {
-        setLoading(false);
-        console.error("Error al obtener las cancelaciones:", error);
-        setError(error.message);
-      });
-  };
+  const [cancelaciones, setCancelaciones] = useState([]);
 
   useEffect(() => {
-    setLoading(true);
-    cargarCancelaciones();
+    axios
+      .get("/cancelacion")
+      .then((res) => setCancelaciones(res.data.data))
+      .catch((err) => console.error("Error al cargar cancelaciones:", err));
   }, []);
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-2">Cancelaciones</h1>
-      <p className="mb-4">Listado de cancelaciones registradas.</p>
-      <div className="ml-5">
-        <button
-          className="px-4 py-2 font-bold text-white bg-green-500 rounded hover:bg-green-700"
-          onClick={() => navigate("/admin/cancelaciones/nueva")}
-        >
-          Registrar Cancelación
-        </button>
-      </div>
-
-      {loading ? (
-        <p>Cargando...</p>
-      ) : (
-        <table className="min-w-full border mt-4">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="p-2 border">Reserva</th>
-              <th className="p-2 border">Motivo</th>
-              <th className="p-2 border">Fecha Cancelación</th>
+      <h1 className="text-2xl font-bold mb-4">Cancelaciones de Clases</h1>
+      <table className="min-w-full border">
+        <thead className="bg-gray-200">
+          <tr>
+            <th className="p-2 border">Alumno</th>
+            <th className="p-2 border">DNI</th>
+            <th className="p-2 border">Disciplina</th>
+            <th className="p-2 border">Fecha</th>
+            <th className="p-2 border">Horario</th>
+            <th className="p-2 border">Motivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cancelaciones.map((c) => (
+            <tr key={c.idCancelacion} className="border-b">
+              <td className="p-2">{c.Reserva?.Usuario?.nombre}</td>
+              <td className="p-2">{c.Reserva?.Usuario?.dni}</td>
+              <td className="p-2">
+                {c.Reserva?.Horario?.Disciplina?.nombre || "—"}
+              </td>
+              <td className="p-2">{c.Reserva?.Horario?.fecha}</td>
+              <td className="p-2">
+                {c.Reserva?.Horario?.horaInicio?.slice(0, 5)} -{" "}
+                {c.Reserva?.Horario?.horaFin?.slice(0, 5)}
+              </td>
+              <td className="p-2">{c.motivo}</td>
             </tr>
-          </thead>
-          <tbody>
-            {data.map((item) => (
-              <tr key={item.idCancelacion} className="text-center border-b">
-                <td className="p-2 border">{item.idReserva}</td>
-                <td className="p-2 border">{item.motivo}</td>
-                <td className="p-2 border">{item.fechaCancelacion?.slice(0, 10)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

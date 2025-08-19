@@ -16,7 +16,7 @@ const FormularioReservas = () => {
   });
 
   useEffect(() => {
-    axios.get("/usuarios").then((res) => setUsuarios(res.data.data));
+    axios.get("/usuario").then((res) => setUsuarios(res.data.data));
     axios.get("/horario").then((res) => setHorarios(res.data.data));
 
     if (id !== "nueva") {

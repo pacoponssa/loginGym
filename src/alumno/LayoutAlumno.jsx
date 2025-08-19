@@ -1,27 +1,27 @@
+import { NavLink, Outlet } from "react-router-dom";
 
-import React from "react";
-import { Outlet, Link } from "react-router-dom";
-
-function LayoutAlumno() {
+export default function LayoutAlumno() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-indigo-600 text-white px-6 py-3 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Panel Alumno</h1>
-        <div className="space-x-4">
-          <Link to="/alumno/reservar" className="hover:underline">
-            Reservar
-          </Link>
-          <Link to="/logout" className="hover:underline">
-            Cerrar sesión
-          </Link>
-        </div>
+    <div className="p-4">
+      <nav className="mb-4 flex gap-4">
+        <NavLink to="" className="text-blue-600">
+          Inicio
+        </NavLink>
+        <NavLink to="misClases" className="text-blue-600">
+          Mis Clases
+        </NavLink>
+        <NavLink to="misInscripciones" className="text-blue-600">
+          Mis Disciplinas
+        </NavLink>
+        <NavLink to="reservar" className="text-blue-600">
+          Reservar Clase
+        </NavLink>
+        <NavLink to="miPlan" className="text-blue-600">
+          Mi Plan
+        </NavLink>
       </nav>
 
-      <main className="p-6">
-        <Outlet />
-      </main>
+      <Outlet />
     </div>
   );
 }
-
-export default LayoutAlumno;

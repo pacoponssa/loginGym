@@ -1,141 +1,62 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
 
-const MisClases = () => {
-  const [reservas, setReservas] = useState([]);
-  const [filtradas, setFiltradas] = useState([]);
-  const [disciplinas, setDisciplinas] = useState([]);
-  const [disciplinaSeleccionada, setDisciplinaSeleccionada] = useState("todas");
-  const [loading, setLoading] = useState(false);
-  const [mensaje, setMensaje] = useState(null);
-  const [error, setError] = useState(null);
-  const [usuario, setUsuario] = useState(null);
+export default function MisClases() {
+  const { user } = useContext(AuthContext);
+  const [clases, setClases] = useState([]);
 
-  // const usuario = JSON.parse(localStorage.getItem("usuario"));
-
-  // Obtener el usuario una vez
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("usuario"));
-    setUsuario(storedUser);
-  }, []);
-
-  useEffect(() => {
-    const cargarReservas = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(`/reserva/usuario/${usuario.idUsuario}`);
-        const reservasObtenidas = res.data.data;
-
-        setReservas(reservasObtenidas);
-        setFiltradas(reservasObtenidas);
-
-        // Extraer disciplinas únicas
-        const disciplinasUnicas = [
-          ...new Set(
-            reservasObtenidas.map((r) => r.Horario?.Disciplina?.nombre).filter(Boolean)
-          ),
-        ];
-        setDisciplinas(disciplinasUnicas);
-
-        setLoading(false);
-      } catch (err) {
-        setError("Error al cargar las reservas");
-        setLoading(false);
-      }
-    };
-
-    if (usuario?.idUsuario) {
-      cargarReservas();
-    }
-  }, [usuario]);
-
-  const handleFiltrar = (nombreDisciplina) => {
-    setDisciplinaSeleccionada(nombreDisciplina);
-    if (nombreDisciplina === "todas") {
-      setFiltradas(reservas);
-    } else {
-      setFiltradas(
-        reservas.filter((r) => r.Horario?.Disciplina?.nombre === nombreDisciplina)
-      );
-    }
-  };
-
-  const cancelarReserva = async (idReserva) => {
+  const cargarClases = async () => {
     try {
-      await axios.post(`/cancelacion/${idReserva}`, {
-        motivo: "Cancelación voluntaria",
-      });
-      setMensaje("Reserva cancelada exitosamente.");
-      const nuevasReservas = reservas.filter((r) => r.idReserva !== idReserva);
-      setReservas(nuevasReservas);
-      handleFiltrar(disciplinaSeleccionada); // Refrescar con filtro activo
-    } catch (err) {
-      setError("No se pudo cancelar la reserva.");
+      const res = await axios.get(`/reserva/usuario/${user.idUsuario}`);
+      setClases(res.data.data);
+    } catch (error) {
+      console.error("Error al cargar clases:", error);
     }
   };
+
+  const cancelar = async (idReserva) => {
+    if (!window.confirm("¿Seguro que deseas cancelar esta clase?")) return;
+    try {
+      await axios.post(`/cancelacion/${idReserva}`);
+      cargarClases();
+    } catch (error) {
+      console.error("Error al cancelar clase:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id) cargarClases();
+  }, [user]);
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4 text-center">Mis Clases</h2>
-
-      {mensaje && <p className="text-green-600 mb-2 text-center">{mensaje}</p>}
-      {error && <p className="text-red-600 mb-2 text-center">{error}</p>}
-
-      <div className="flex flex-wrap justify-center gap-2 mb-4">
-        <button
-          className={`px-3 py-1 rounded text-white ${
-            disciplinaSeleccionada === "todas" ? "bg-blue-600" : "bg-gray-500"
-          }`}
-          onClick={() => handleFiltrar("todas")}
-        >
-          Todas
-        </button>
-        {disciplinas.map((d) => (
-          <button
-            key={d}
-            className={`px-3 py-1 rounded text-white ${
-              disciplinaSeleccionada === d ? "bg-blue-600" : "bg-gray-500"
-            }`}
-            onClick={() => handleFiltrar(d)}
-          >
-            {d}
-          </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <p className="text-center">Cargando clases...</p>
-      ) : filtradas.length === 0 ? (
-        <p className="text-center text-gray-600">
-          No tenés clases asignadas por el momento.
-        </p>
+      <h2 className="text-xl font-bold mb-4">Mis clases reservadas</h2>
+      {clases.length === 0 ? (
+        <p className="text-gray-500">No tenés clases reservadas.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {filtradas.map((r) => (
-            <div
-              key={r.idReserva}
-              className="bg-white shadow-md rounded-lg p-4 border border-gray-200"
-            >
-              <h3 className="font-bold text-lg mb-2">
-                {r.Horario?.Disciplina?.nombre || "Sin nombre"}
-              </h3>
-              <p className="text-sm mb-1">📅 Fecha: {r.Horario?.fecha}</p>
-              <p className="text-sm mb-3">
-                🕒 {r.Horario?.horaInicio?.slice(0, 5)} -{" "}
-                {r.Horario?.horaFin?.slice(0, 5)}
-              </p>
-              <button
-                onClick={() => cancelarReserva(r.idReserva)}
-                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-              >
-                Cancelar
-              </button>
-            </div>
-          ))}
+        <div className="grid gap-4">
+          {clases
+            .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+            .map((clase) => (
+              <div key={clase.idReserva} className="p-4 border rounded shadow">
+                <p><strong>Disciplina:</strong> {clase.horario?.Disciplina?.nombre}</p>
+                <p><strong>Fecha:</strong> {clase.fecha}</p>
+                <p><strong>Hora:</strong> {clase.horaInicio}</p>
+                {!clase.cancelada ? (
+                  <button
+                    onClick={() => cancelar(clase.idReserva)}
+                    className="mt-2 bg-red-500 text-white px-3 py-1 rounded"
+                  >
+                    Cancelar
+                  </button>
+                ) : (
+                  <p className="text-red-600 mt-2">Cancelada</p>
+                )}
+              </div>
+            ))}
         </div>
       )}
     </div>
   );
-};
-
-export default MisClases;
+}

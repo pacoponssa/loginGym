@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import CalendarioAdmin from "./CalendarioAdmin";
 
 function ReservasIndex() {
   const navigate = useNavigate();
@@ -10,7 +11,8 @@ function ReservasIndex() {
   const [idAEliminar, setIdAEliminar] = useState(null);
 
   const cargarReservas = () => {
-    axios.get("/reserva")
+    axios
+      .get("/reserva")
       .then((respuesta) => {
         setLoading(false);
         if (respuesta.status === 200) {
@@ -37,7 +39,8 @@ function ReservasIndex() {
 
   const confirmarEliminacion = () => {
     if (!idAEliminar) return;
-    axios.delete(`/reserva/${idAEliminar}`)
+    axios
+      .delete(`/reserva/${idAEliminar}`)
       .then(() => {
         setModalOpen(false);
         setIdAEliminar(null);
@@ -53,6 +56,9 @@ function ReservasIndex() {
       <h1 className="text-2xl font-bold mb-2">Reservas</h1>
       <p className="mb-4">Listado de reservas realizadas por los usuarios.</p>
 
+      <div>
+        <CalendarioAdmin />
+      </div>
       <div className="ml-5">
         <button
           className="px-4 py-2 font-bold text-white bg-green-500 rounded hover:bg-green-700"
@@ -77,8 +83,12 @@ function ReservasIndex() {
           <tbody>
             {data.map((reserva) => (
               <tr key={reserva.idReserva} className="text-center border-b">
-                <td className="p-2 border">{reserva.Usuario?.nombre || reserva.idUsuario}</td>
-                <td className="p-2 border">{reserva.Horario?.horaInicio || reserva.idHorario}</td>
+                <td className="p-2 border">
+                  {reserva.Usuario?.nombre || reserva.idUsuario}
+                </td>
+                <td className="p-2 border">
+                  {reserva.Horario?.horaInicio || reserva.idHorario}
+                </td>
                 {/* <td className="p-2 border">{reserva.fecha}</td> */}
                 <td className="p-2 border">
                   <div className="flex justify-center gap-2">
@@ -102,7 +112,9 @@ function ReservasIndex() {
       {modalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-6 rounded shadow-md text-center w-80">
-            <h2 className="text-lg font-semibold mb-4">¿Confirmar eliminación?</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              ¿Confirmar eliminación?
+            </h2>
             <p className="mb-4 text-sm">Esta acción no se puede deshacer.</p>
             <div className="flex justify-center gap-4">
               <button

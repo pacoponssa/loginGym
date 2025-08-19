@@ -3,7 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
-  const [email, setEmail] = useState("");
+  const [dni, setDni] = useState("");
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -11,14 +11,24 @@ const Register = () => {
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
-  e.preventDefault();
-  try {
-    await register(email, password, nombre, telefono);
-    navigate("/alumno");
-  } catch (error) {
-    console.error("Error de registro:", error);
-  }
-};
+    e.preventDefault();
+    try {
+      await register(dni, password, nombre, telefono);
+      navigate("/alumno");
+    } catch (error) {
+      console.error("Error de registro:", error);
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    const user = JSON.parse(localStorage.getItem("usuario"));
+
+    if (token && user) {
+      if (user.rol === 2) navigate("/admin");
+      if (user.rol === 1) navigate("/alumno");
+    }
+  }, []);
 
   return (
     <>
@@ -35,7 +45,7 @@ const Register = () => {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              class="lucide lucide-dumbbell "
+              className="lucide lucide-dumbbell "
             >
               <path d="m6.5 6.5 11 11"></path>
               <path d="m21 21-1-1"></path>
@@ -78,17 +88,17 @@ const Register = () => {
           </div>
           <div>
             <label
-              htmlFor="email"
+              htmlFor="dni"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Correo Electrónico
+              DNI
             </label>
             <input
-              id="email"
-              type="email"
-              placeholder="Correo electrónico"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="dni"
+              type="text"
+              placeholder="12345678"
+              value={dni}
+              onChange={(e) => setDni(e.target.value)}
               className="block w-full py-2.5 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>

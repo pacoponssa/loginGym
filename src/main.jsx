@@ -5,29 +5,36 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Login from "./components/Login";
+
 import "./index.css";
 // admin
 import Dashboard from "./admin/Dashboard";
-import LayoutAdmin from "./admin/LayoutAdmin";
-import DisciplinasIndex from "./admin/disciplinas/index";
-import FormularioDisciplinas from "./admin/disciplinas/formulario";
+import AdminPanel from "./admin/AdminPanel";
 import HorariosIndex from "./admin/horarios/index";
 import FormularioHorarios from "./admin/horarios/formulario";
-import UsuariosIndex from "./admin/usuarios/index";
-import FormularioUsuarios from "./admin/usuarios/formulario";
 import ReservasIndex from "./admin/reservas";
 import FormularioReservas from "./admin/reservas/formulario";
 import FormularioCancelaciones from "./admin/cancelaciones/formulario";
 import CancelacionesIndex from "./admin/cancelaciones";
+import CalendarioAdmin from "./admin/CalendarioAdmin";
+import DisciplinasAdmin from "./admin/disciplinas/DisciplinasAdmin";
+import FormularioDisciplinas from "./admin/disciplinas/FormularioDisciplinas";
+import AlumnosAdmin from "./admin/alumnos/AlumnosAdmin";
+import FormularioAlumno from "./admin/alumnos/FormularioAlumno";
+import AsignarDisciplinas from "./admin/alumnos/AsignarDisciplinas";
+import AsignarPlan from "./admin/alumnos/AsignarPlan";
+
 // alumno
-import LayoutAlumno from "./alumno/LayoutAlumno"; 
+import LayoutAlumno from "./alumno/LayoutAlumno";
 import InicioAlumno from "./alumno/InicioAlumno";
-import ReservaAlumno from "./alumno/reservaAlumno";
+import ReservarClase from "./alumno/ReservarClase";
+import DisciplinasAsignadas from "./alumno/DisciplinasAsignadas";
+import MiPlan from "./alumno/MiPlan";
+import MisClases from "./alumno/MisClases";
 
-
-import Register from "./components/Register"; 
+import Register from "./components/Register";
 import RutaPrivada from "./components/RutasPrivadas";
-import { AuthProvider } from "./context/AuthContext"; 
+import { AuthProvider } from "./context/AuthContext";
 
 axios.defaults.baseURL = "http://localhost:3000";
 
@@ -47,19 +54,34 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/admin",
-        element: <LayoutAdmin />,
+        element: <AdminPanel />,
         children: [
           { path: "", element: <Dashboard /> },
-          { path: "usuarios", element: <UsuariosIndex /> },
-          { path: "usuarios/:id", element: <FormularioUsuarios /> },
-          { path: "disciplinas", element: <DisciplinasIndex /> },
+          { path: "alumnos", element: <AlumnosAdmin /> },
+          { path: "usuario", element: <FormularioAlumno /> },
+          { path: "usuario/:id", element: <FormularioAlumno /> }, // si ya usás FormularioAlumno directamente
+          { path: "usuario/:id/disciplinas", element: <AsignarDisciplinas /> },
+          { path: "usuario/:id/plan", element: <AsignarPlan /> },
+
+          // Calendario
+          { path: "calendario", element: <CalendarioAdmin /> },
+
+          // Disciplinas
+          { path: "disciplinas", element: <DisciplinasAdmin /> },
+          { path: "disciplinas/nueva", element: <FormularioDisciplinas /> },
           { path: "disciplinas/:id", element: <FormularioDisciplinas /> },
+
+          // Horarios
           { path: "horarios", element: <HorariosIndex /> },
           { path: "horarios/:id", element: <FormularioHorarios /> },
+
+          // Reservas y cancelaciones
           { path: "reservas", element: <ReservasIndex /> },
           { path: "reservas/:id", element: <FormularioReservas /> },
           { path: "cancelaciones", element: <CancelacionesIndex /> },
           { path: "cancelaciones/:id", element: <FormularioCancelaciones /> },
+
+        
         ],
       },
     ],
@@ -74,18 +96,16 @@ const router = createBrowserRouter([
         element: <LayoutAlumno />,
         children: [
           { path: "", element: <InicioAlumno /> },
-          { path: "reservar", element: <ReservaAlumno /> },
+          { path: "reservar", element: <ReservarClase /> },
+          { path: "miPlan", element: <MiPlan /> },
+          { path: "misClases", element: <MisClases /> },
+          // { path: "inscripciones", element: <InscripcionAlumno /> },
+          { path: "misInscripciones", element: <DisciplinasAsignadas /> },
         ],
       },
     ],
   },
 ]);
-
-
-//  <Route path="/" element={<Login />} />
-//             <Route path="/login" element={<Login />} />
-//             <Route path="/register" element={<Register />} />
-//             <Route path="/protected" element={""} />
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
