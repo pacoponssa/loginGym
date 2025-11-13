@@ -5,6 +5,8 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Login from "./components/Login";
+import { Navigate } from "react-router-dom";
+
 
 import "./index.css";
 // admin
@@ -23,6 +25,7 @@ import AlumnosAdmin from "./admin/alumnos/AlumnosAdmin";
 import FormularioAlumno from "./admin/alumnos/FormularioAlumno";
 import AsignarDisciplinas from "./admin/alumnos/AsignarDisciplinas";
 import AsignarPlan from "./admin/alumnos/AsignarPlan";
+import ProfesoresAdmin from "./admin/profesores/ProfesoresAdmin";
 
 // alumno
 import LayoutAlumno from "./alumno/LayoutAlumno";
@@ -41,6 +44,10 @@ axios.defaults.baseURL = "http://localhost:3000";
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <Navigate to="/login" />, // redirección segura
+  },
+  {
+    path: "/login",
     element: <Login />,
   },
   {
@@ -63,6 +70,7 @@ const router = createBrowserRouter([
           { path: "usuario/:id/disciplinas", element: <AsignarDisciplinas /> },
           { path: "usuario/:id/plan", element: <AsignarPlan /> },
 
+
           // Calendario
           { path: "calendario", element: <CalendarioAdmin /> },
 
@@ -81,7 +89,8 @@ const router = createBrowserRouter([
           { path: "cancelaciones", element: <CancelacionesIndex /> },
           { path: "cancelaciones/:id", element: <FormularioCancelaciones /> },
 
-        
+          { path: "profesores", element: <ProfesoresAdmin /> },
+
         ],
       },
     ],

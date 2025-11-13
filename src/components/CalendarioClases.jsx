@@ -3,22 +3,26 @@ import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
+import "moment/locale/es";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
+// Configura moment en español
+moment.locale("es");
 const localizer = momentLocalizer(moment);
 
 export default function CalendarioClases() {
   const [eventos, setEventos] = useState([]);
-  const { usuario } = useContext(AuthContext);
+  const { user } = useContext(AuthContext); // ← Usamos 'user', no 'usuario'
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
 
+
   useEffect(() => {
-    if (!usuario) return;
+    if (!user?.id) return;
     cargarReservas();
-  }, [usuario]);
+  }, [user]);
 
   const cargarReservas = () => {
-    const idUsuario = usuario?.idUsuario || usuario?.id;
+    const idUsuario = user.id;
 
     const diasSemana = {
       Domingo: 0,
@@ -58,7 +62,9 @@ export default function CalendarioClases() {
 
             return {
               id: item.idReserva,
-              title: Horario?.Disciplina?.descripcion || "Clase",
+              title: `${
+                Horario?.Disciplina?.descripcion || "Clase"
+              } - ${dia} ${hora}`,
               start,
               end,
               infoExtra: {
@@ -85,7 +91,7 @@ export default function CalendarioClases() {
       .then(() => {
         alert("Reserva cancelada con éxito");
         setEventoSeleccionado(null);
-        cargarReservas(); // recargar calendario
+        cargarReservas();
       })
       .catch((err) => {
         console.error("Error al cancelar reserva:", err);
@@ -105,6 +111,21 @@ export default function CalendarioClases() {
         views={["month", "week", "day"]}
         defaultView="week"
         onSelectEvent={manejarSeleccion}
+        messages={{
+          allDay: "Todo el día",
+          previous: "Anterior",
+          next: "Siguiente",
+          today: "Hoy",
+          month: "Mes",
+          week: "Semana",
+          day: "Día",
+          agenda: "Agenda",
+          date: "Fecha",
+          time: "Hora",
+          event: "Clase",
+          noEventsInRange: "No hay clases en este rango",
+          showMore: (total) => `+ Ver más (${total})`,
+        }}
       />
 
       {eventoSeleccionado && (
@@ -115,15 +136,18 @@ export default function CalendarioClases() {
             </h3>
             <p>
               <strong>Inicio:</strong>{" "}
-              {moment(eventoSeleccionado.start).format("LLLL")}
+              {moment(eventoSeleccionado.start).format(
+                "dddd D [de] MMMM [a las] HH:mm"
+              )}
             </p>
             <p>
               <strong>Fin:</strong>{" "}
-              {moment(eventoSeleccionado.end).format("LLLL")}
+              {moment(eventoSeleccionado.end).format(
+                "dddd D [de] MMMM [a las] HH:mm"
+              )}
             </p>
             <p>
-              <strong>Profesor:</strong>{" "}
-              {eventoSeleccionado.infoExtra.profesor}
+              <strong>Profesor:</strong> {eventoSeleccionado.infoExtra.profesor}
             </p>
 
             <div className="mt-4 flex justify-end space-x-2">

@@ -15,7 +15,7 @@ const diasSemana = [
 export default function FormularioDisciplinas() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const esNuevo = id === "nueva";
+  const esNuevo = !id || id === "nueva";
 
   const [disciplina, setDisciplina] = useState({
     nombre: "",
@@ -28,7 +28,7 @@ export default function FormularioDisciplinas() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!esNuevo) {
+    if (id && id !== "nueva") {
       const fetchDisciplina = async () => {
         setLoading(true);
         try {
@@ -50,7 +50,7 @@ export default function FormularioDisciplinas() {
       };
       fetchDisciplina();
     }
-  }, [esNuevo, id]);
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -66,7 +66,10 @@ export default function FormularioDisciplinas() {
   const agregarHorario = () => {
     setDisciplina((prev) => ({
       ...prev,
-      disponibilidad: [...prev.disponibilidad, { dia: "", horaInicio: "", horaFin: "" }],
+      disponibilidad: [
+        ...prev.disponibilidad,
+        { dia: "", horaInicio: "", horaFin: "" },
+      ],
     }));
   };
 
@@ -159,7 +162,9 @@ export default function FormularioDisciplinas() {
                 <div key={i} className="flex gap-2 mb-2">
                   <select
                     value={item.dia}
-                    onChange={(e) => handleDisponibilidadChange(i, "dia", e.target.value)}
+                    onChange={(e) =>
+                      handleDisponibilidadChange(i, "dia", e.target.value)
+                    }
                     className="border p-1 rounded"
                   >
                     <option value="">Día</option>
@@ -172,21 +177,37 @@ export default function FormularioDisciplinas() {
                   <input
                     type="time"
                     value={item.horaInicio}
-                    onChange={(e) => handleDisponibilidadChange(i, "horaInicio", e.target.value)}
+                    onChange={(e) =>
+                      handleDisponibilidadChange(
+                        i,
+                        "horaInicio",
+                        e.target.value
+                      )
+                    }
                     className="border p-1 rounded"
                   />
                   <input
                     type="time"
                     value={item.horaFin}
-                    onChange={(e) => handleDisponibilidadChange(i, "horaFin", e.target.value)}
+                    onChange={(e) =>
+                      handleDisponibilidadChange(i, "horaFin", e.target.value)
+                    }
                     className="border p-1 rounded"
                   />
-                  <button type="button" onClick={() => quitarHorario(i)} className="text-red-600">
+                  <button
+                    type="button"
+                    onClick={() => quitarHorario(i)}
+                    className="text-red-600"
+                  >
                     ✕
                   </button>
                 </div>
               ))}
-              <button type="button" onClick={agregarHorario} className="text-blue-600 text-sm">
+              <button
+                type="button"
+                onClick={agregarHorario}
+                className="text-blue-600 text-sm"
+              >
                 + Agregar horario
               </button>
             </div>

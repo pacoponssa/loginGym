@@ -7,21 +7,33 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(
     localStorage.getItem("accessToken") || null
   );
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("usuario")) || null
+  );
+  const [logoutCallback, setLogoutCallback] = useState(() => () => {});
 
   axios.defaults.withCredentials = true;
 
-  const [logoutCallback, setLogoutCallback] = useState(() => () => {});
-
-  // Configurar token en Axios cuando cambia
   useEffect(() => {
     const storedToken = localStorage.getItem("accessToken");
+    const storedUser = localStorage.getItem("usuario");
+
     if (storedToken) {
       setToken(storedToken);
       axios.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
     }
+
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      // Normalización
+      const normalizedUser = {
+        ...parsedUser,
+        id: parsedUser.idUsuario,
+      };
+      setUser(normalizedUser);
+    }
   }, []);
 
-  // Interceptor para refrescar automáticamente
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
@@ -31,13 +43,13 @@ export const AuthProvider = ({ children }) => {
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
           try {
-            await refreshToken(); // Intenta refrescar
+            await refreshToken();
             const newToken = localStorage.getItem("accessToken");
             axios.defaults.headers.common[
               "Authorization"
             ] = `Bearer ${newToken}`;
             originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-            return axios(originalRequest); // Reintenta con nuevo token
+            return axios(originalRequest);
           } catch (err) {
             logout();
             return Promise.reject(err);
@@ -49,29 +61,30 @@ export const AuthProvider = ({ children }) => {
     );
 
     return () => {
-      axios.interceptors.response.eject(interceptor); // Limpieza
+      axios.interceptors.response.eject(interceptor);
     };
   }, []);
 
   const login = async (dni, password) => {
     const response = await axios.post(
       "http://localhost:3000/auth/login",
-      {
-        dni,
-        password,
-      },
-      {
-        withCredentials: true, // Permite manejar cookies de sesión
-      }
+      { dni, password },
+      { withCredentials: true }
     );
 
     const accessToken = response.data.accessToken;
-    const refreshToken = response.data.refreshToken;
-    const user = response.data.usuario;
+    const rawUser = response.data.usuario;
+
+    // ✅ Normalizamos para tener .id
+    const user = {
+      ...rawUser,
+      id: rawUser.idUsuario,
+    };
 
     setToken(accessToken);
+    setUser(user);
+
     localStorage.setItem("accessToken", accessToken);
-    // localStorage.setItem("refreshToken", refreshToken);
     localStorage.setItem("usuario", JSON.stringify(user));
 
     axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
@@ -84,27 +97,21 @@ export const AuthProvider = ({ children }) => {
       password,
       nombre,
       telefono,
-      rol: 1, // siempre rol alumno
+      rol: 1,
     });
 
     const user = response.data.user;
+    setUser(user);
     localStorage.setItem("usuario", JSON.stringify(user));
     return user;
   };
 
   const refreshToken = async () => {
-    // const storedRefreshToken = localStorage.getItem("refreshToken");
-    // if (!storedRefreshToken) return;
-
     try {
       const response = await axios.post(
         "http://localhost:3000/auth/refresh",
-        {
-          token: storedRefreshToken,
-        },
-        {
-          withCredentials: true,
-        }
+        {},
+        { withCredentials: true }
       );
 
       const newAccessToken = response.data.accessToken;
@@ -118,12 +125,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setToken(null);
+    setUser(null);
     localStorage.clear();
     delete axios.defaults.headers.common["Authorization"];
-    logoutCallback(); // Ejecutar lo que se haya definido externamente
+    logoutCallback();
   };
 
-  // Refresca token cada 14 minutos
   useEffect(() => {
     const interval = setInterval(refreshToken, 14 * 60 * 1000);
     return () => clearInterval(interval);
@@ -131,7 +138,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ token, login, logout, register, setLogoutCallback }}
+      value={{ token, user, login, logout, register, setLogoutCallback }}
     >
       {children}
     </AuthContext.Provider>

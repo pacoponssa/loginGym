@@ -47,6 +47,7 @@ const Login = () => {
     const user = JSON.parse(localStorage.getItem("usuario"));
 
     if (token && user) {
+      // En vez de borrar la sesión, redirigí automáticamente
       if (user.rol === 2) navigate("/admin");
       if (user.rol === 1) navigate("/alumno");
     }

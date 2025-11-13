@@ -1,4 +1,4 @@
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useEffect, useState } from "react";
 import { format, parse, startOfWeek, getDay } from "date-fns";
@@ -19,6 +19,9 @@ export default function CalendarioAdmin() {
   const [filtroDisciplina, setFiltroDisciplina] = useState("");
   const [filtroAlumno, setFiltroAlumno] = useState("");
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
+
+  const [view, setView] = useState("week");
+  const [date, setDate] = useState(new Date());
 
   useEffect(() => {
     const fetchEventos = async () => {
@@ -55,7 +58,7 @@ export default function CalendarioAdmin() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-white shadow rounded-lg">
       <h2 className="text-xl font-semibold mb-4">Calendario de turnos</h2>
 
       {/* Filtros */}
@@ -101,6 +104,11 @@ export default function CalendarioAdmin() {
         startAccessor="start"
         endAccessor="end"
         style={{ height: 600 }}
+        views={{ month: true, week: true, day: true }}
+        view={view}
+        onView={setView}
+        date={date}
+        onNavigate={setDate}
         messages={{
           today: "Hoy",
           previous: "Anterior",
@@ -108,6 +116,9 @@ export default function CalendarioAdmin() {
           month: "Mes",
           week: "Semana",
           day: "Día",
+          agenda: "Agenda",
+          noEventsInRange: "No hay eventos en este rango",
+          showMore: (total) => `+ Ver más (${total})`,
         }}
         onSelectEvent={(evento) => setEventoSeleccionado(evento)}
       />

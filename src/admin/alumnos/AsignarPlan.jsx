@@ -9,10 +9,13 @@ const AsignarPlan = () => {
   const [plan, setPlan] = useState(null);
   const [clasesPorSemana, setClasesPorSemana] = useState(2);
   const [mesesPagados, setMesesPagados] = useState(1);
+  const [fechaInicio, setFechaInicio] = useState(new Date().toISOString().split("T")[0]);
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!id) return;
+
     const cargarPlan = async () => {
       try {
         const res = await axios.get(`/planAlumno/${id}`);
@@ -20,10 +23,15 @@ const AsignarPlan = () => {
           setPlan(res.data.data);
           setClasesPorSemana(res.data.data.clasesPorSemana || 2);
           setMesesPagados(res.data.data.mesesPagados || 1);
+          setFechaInicio(res.data.data.fechaInicio || new Date().toISOString().split("T")[0]);
         }
       } catch (err) {
-        console.error(err);
-        setError("No se pudo cargar el plan del alumno.");
+        if (err.response && err.response.status === 404) {
+          setPlan(null); // No hay plan, se puede crear uno nuevo
+        } else {
+          console.error(err);
+          setError("No se pudo cargar el plan del alumno.");
+        }
       }
     };
 
@@ -39,7 +47,7 @@ const AsignarPlan = () => {
       const datosPlan = {
         clasesPorSemana,
         mesesPagados,
-        fechaInicio: new Date().toISOString().split("T")[0], // YYYY-MM-DD
+        fechaInicio,
       };
 
       if (plan) {
@@ -47,7 +55,6 @@ const AsignarPlan = () => {
         setMensaje("Plan actualizado correctamente.");
       } else {
         await axios.post("/planAlumno", {
-          id,
           idUsuario: id,
           ...datosPlan,
         });
@@ -75,6 +82,12 @@ const AsignarPlan = () => {
     }
   };
 
+  const calcularFechaFin = () => {
+    const fecha = new Date(fechaInicio);
+    fecha.setMonth(fecha.getMonth() + mesesPagados);
+    return fecha.toLocaleDateString("es-AR");
+  };
+
   return (
     <div className="max-w-lg mx-auto p-4">
       <h2 className="text-xl font-bold mb-4 text-center">
@@ -83,6 +96,12 @@ const AsignarPlan = () => {
 
       {mensaje && <p className="text-green-600 text-center mb-2">{mensaje}</p>}
       {error && <p className="text-red-600 text-center mb-2">{error}</p>}
+
+      {plan && (
+        <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded text-sm mb-4">
+          ⚠️ Al actualizar este plan, se eliminarán y regenerarán todas las reservas futuras del alumno.
+        </div>
+      )}
 
       <form onSubmit={handleGuardar} className="space-y-4">
         <div>
@@ -107,6 +126,20 @@ const AsignarPlan = () => {
             className="w-full border border-gray-300 rounded px-3 py-2"
           />
         </div>
+
+        <div>
+          <label className="block mb-1 font-semibold">Fecha de inicio:</label>
+          <input
+            type="date"
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+          />
+        </div>
+
+        <p className="text-sm text-gray-600">
+          Este plan finalizará el <strong>{calcularFechaFin()}</strong>.
+        </p>
 
         <div className="flex gap-2">
           <button

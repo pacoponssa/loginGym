@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
+import { startOfWeek, endOfWeek, isWithinInterval, parseISO } from "date-fns";
 
 function ReservarClase() {
+  const [plan, setPlan] = useState(null);
   const [horarios, setHorarios] = useState([]);
   const [idHorario, setIdHorario] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -27,6 +29,11 @@ function ReservarClase() {
         setHorarios(horariosFiltrados);
       })
       .catch(() => setError("Error al cargar horarios"));
+
+    axios
+      .get(`/planAlumno/${idUsuario}`)
+      .then((res) => setPlan(res.data))
+      .catch(() => console.log("No se pudo cargar el plan del alumno"));
 
     axios
       .get(`/inscripcion/${idUsuario}/disciplina`)
@@ -56,6 +63,20 @@ function ReservarClase() {
         .catch(() => console.log("No se pudieron cargar reservas previas"));
     }
   }, [idUsuario]);
+
+  const getReservasEstaSemana = () => {
+    const hoy = new Date();
+    const inicio = startOfWeek(hoy, { weekStartsOn: 1 }); // lunes
+    const fin = endOfWeek(hoy, { weekStartsOn: 1 }); // domingo
+
+    return reservasFuturas.filter((r) => {
+      const fecha = parseISO(r.fecha || r.Horario?.fecha);
+      return isWithinInterval(fecha, { start: inicio, end: fin });
+    });
+  };
+
+  const superoLimiteSemanal =
+    plan && getReservasEstaSemana().length >= plan.clasesPorSemana;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -240,11 +261,19 @@ function ReservarClase() {
           </table>
         </div>
 
-        {idHorario && (
-          <div className="flex justify-center mt-6">
+        {plan && idHorario && (
+          <div className="flex flex-col items-center mt-6 space-y-2">
+            {superoLimiteSemanal && (
+              <p className="text-red-500 font-semibold text-center">
+                Ya alcanzaste el máximo de {plan.clasesPorSemana} clases esta
+                semana.
+              </p>
+            )}
+
             <button
               type="submit"
-              className="px-6 py-2 font-bold text-white bg-blue-600 rounded hover:bg-blue-700"
+              className="px-6 py-2 font-bold text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+              disabled={superoLimiteSemanal}
             >
               Confirmar Reserva
             </button>
